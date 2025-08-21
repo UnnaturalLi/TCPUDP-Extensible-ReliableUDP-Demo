@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TCPSession")]
+[assembly: AssemblyTitle("NetworkBase")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TCPSession")]
+[assembly: AssemblyProduct("NetworkBase")]
 [assembly: AssemblyCopyright("Copyright ©  2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("41F6F35D-F808-486A-AD4C-86AB57F2C32F")]
+[assembly: Guid("A0F33D90-3703-40F9-B6A9-DD12F1798E0D")]
 
 // Version information for an assembly consists of the following four values:
 //
