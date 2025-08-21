@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkBase", "NetworkBase\NetworkBase.csproj", "{A0F33D90-3703-40F9-B6A9-DD12F1798E0D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCPClient", "TCPClient\TCPClient.csproj", "{14D9E88C-3692-4501-AD7A-C1BBAC49AC1E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCPServer", "TCPServer\TCPServer.csproj", "{EDE34576-CC20-4B6C-9950-8E98D60567AD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A0F33D90-3703-40F9-B6A9-DD12F1798E0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0F33D90-3703-40F9-B6A9-DD12F1798E0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0F33D90-3703-40F9-B6A9-DD12F1798E0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0F33D90-3703-40F9-B6A9-DD12F1798E0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14D9E88C-3692-4501-AD7A-C1BBAC49AC1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14D9E88C-3692-4501-AD7A-C1BBAC49AC1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14D9E88C-3692-4501-AD7A-C1BBAC49AC1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14D9E88C-3692-4501-AD7A-C1BBAC49AC1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EDE34576-CC20-4B6C-9950-8E98D60567AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDE34576-CC20-4B6C-9950-8E98D60567AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDE34576-CC20-4B6C-9950-8E98D60567AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDE34576-CC20-4B6C-9950-8E98D60567AD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
