@@ -17,18 +17,24 @@ namespace TCPServer
             Read = 0;
         }
     }
-    public abstract class TCPServer<T> where T : INetPacket, new()
+    public abstract class TCPServer
     {
         protected TCPServerSession m_Session;
         protected IPEndPoint m_EndPoint;
         protected Dictionary<int, byte[]> m_ReceiveBuffers = new Dictionary<int, byte[]>();
         protected Dictionary<int, ReadInfo> m_ReadInfos = new Dictionary<int, ReadInfo>();
+        protected int m_RecvPacketIndex;
         public bool Init(IPEndPoint ipEndPoint)
         {
             m_EndPoint = ipEndPoint;
             m_Session = new TCPServerSession();
             m_Session.Init(60, (ReceiveData)OnReceiveData, ipEndPoint);
             return OnInit();
+        }
+
+        public void SetReceivePacketIndex(int index)
+        {
+            m_RecvPacketIndex = index;
         }
         public void Start()
         {
@@ -86,20 +92,20 @@ namespace TCPServer
                         m_ReadInfos[id].Read++;
                         m_ReadInfos[id].Read%= 1024;
                     }
-                    T obj = UnPack(packet);
+                    INetPacket obj = UnPack(packet);
                     OnReceiveObj(id,obj);
                 }
             }
             
         }
-        public abstract void OnReceiveObj(int id, T obj);
+        public abstract void OnReceiveObj(int id, INetPacket obj);
         
-        public void SendTo(int id, T obj)
+        public void SendTo(int id, INetPacket obj)
         {
             m_Session.AppendToSend(id, ToPacket(obj));
         }
 
-        public byte[] ToPacket(T obj)
+        public byte[] ToPacket(INetPacket obj)
         {
             byte[] data=obj.ToBytes();
             byte[] returnData=new byte[data.Length+4];
@@ -108,13 +114,13 @@ namespace TCPServer
             Array.Copy(data, 0, returnData,4,data.Length);
             return returnData;
         }
-        public T UnPack(byte[] data)
+        public INetPacket UnPack(byte[] data)
         {
-            T obj = new T();
+            INetPacket obj = Factory_Demo.Instance.GetPacket(m_RecvPacketIndex);
             obj.FromBytes(data);
             return obj;
         }
-        public void Broadcast(T obj)
+        public void Broadcast(INetPacket obj)
         {
             int n = m_Session.GetClientCount();
             for (int i = 0; i < n; i++)

@@ -7,12 +7,19 @@ namespace TCPClient
     {
         public static void Main(string[] args)
         {
+            Factory_Demo factory_Demo = new Factory_Demo();
+            if (!factory_Demo.Init())
+            {
+                Logger.LogToTerminal("Fall to init Factory");
+                return;
+            }
             TCPClient_Demo client = new TCPClient_Demo();
             if (!client.Init(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9888)))
             {
                 Logger.LogToTerminal("Fall to connect to the server");
                 return;
             }
+            client.SetReceivePacketIndex(0);
             client.Start();
             Console.WriteLine("\n---Press Return to Send---");
             Console.CancelKeyPress += (sender, e) =>

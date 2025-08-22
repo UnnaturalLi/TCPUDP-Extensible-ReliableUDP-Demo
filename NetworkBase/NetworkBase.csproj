@@ -42,6 +42,8 @@
     <ItemGroup>
         <Compile Include="AppBase.cs" />
         <Compile Include="ClientBase.cs" />
+        <Compile Include="Factory.cs" />
+        <Compile Include="Factory_Demo.cs" />
         <Compile Include="INetPacket.cs" />
         <Compile Include="Logger.cs" />
         <Compile Include="NetworkSessionBase.cs" />

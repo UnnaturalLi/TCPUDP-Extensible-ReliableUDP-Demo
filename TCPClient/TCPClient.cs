@@ -7,16 +7,17 @@ using NetworkBase;
 using NetworkBase;
 namespace TCPClient
 {
-    public abstract class TCPClient<T> : ClientBase where T : INetPacket, new()
+    public abstract class TCPClient : ClientBase 
     {
-        public Queue<T> dataQueue;
+        public Queue<INetPacket> dataQueue;
         public bool isRunning;
         private byte[] m_recvBuffer;
         private uint m_recvBufferSize;
         private uint _ReadPos=0, _WritePos=0;
+        protected int m_RecevPacketIndex;
         protected override bool OnInit()
         {
-            dataQueue = new Queue<T>();
+            dataQueue = new Queue<INetPacket>();
             m_recvBuffer = new byte[1024];
             session = new TCPSession();
             (session as TCPSession).OnDataReceived += Receive;
@@ -28,6 +29,10 @@ namespace TCPClient
             return true;
         }
 
+        public void SetReceivePacketIndex(int index)
+        {
+            m_RecevPacketIndex = index;
+        }
         protected override void OnStart()
         {
             isRunning = true;
@@ -40,7 +45,7 @@ namespace TCPClient
             base.OnStop();
         }
 
-        public void Send(T packet)
+        public void Send(INetPacket packet)
         {
             var data = packet.ToBytes();
             byte[] sendBuffer=new byte[data.Length + 4];
@@ -62,7 +67,6 @@ namespace TCPClient
                         _WritePos %= 1024;
                     }
                 }
-                //Problems
                 while ((_WritePos - _ReadPos + 1024) % 1024 >= 4)
                 {
                     byte[] headBuffer = new byte[4];
@@ -91,7 +95,11 @@ namespace TCPClient
                         _ReadPos++;
                         _ReadPos %= 1024;
                     }
-                    var obj = new T();
+                    INetPacket obj = Factory_Demo.Instance.GetPacket(m_RecevPacketIndex);
+                    if (obj == null)
+                    {
+                        throw new Exception("Factory Error");
+                    }
                     obj.FromBytes(packetBuffer);
                     lock (dataQueue)
                     {

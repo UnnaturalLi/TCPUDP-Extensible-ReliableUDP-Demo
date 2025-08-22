@@ -12,7 +12,7 @@ namespace NetworkBase
             set { session.isClosed = value; }
         }
 
-        public bool Init(IPEndPoint ipEndPoint)
+        public virtual bool Init(IPEndPoint ipEndPoint)
         {
             m_Addr = ipEndPoint;
             return OnInit();
