@@ -4,23 +4,24 @@ using System.Net.Sockets;
 using System.Threading;
 using NetworkBase;
 using System;
+public delegate void ReceiveData(int id);
 namespace TCPServer
 {
-    public class ClientInfo
+    public class TCPClientInfo
     {
         public TcpClient client;
         public Thread receiveThread{get;set;}
         public int id { set; get; }
-        public ClientInfo(TcpClient client)
+        public TCPClientInfo(TcpClient client)
         {
             this.client = client;
         }
     }
-    public delegate void ReceiveData(int id);
+    
     public class TCPServerSession : AppBase
     {
         protected Thread m_SendThread;
-        protected List<ClientInfo> m_Clients = new List<ClientInfo>();
+        protected List<TCPClientInfo> m_Clients = new List<TCPClientInfo>();
         protected List<Queue<byte[]>> m_RecvDataBuffers = new List<Queue<byte[]>>();
         protected List<Queue<byte[]>> m_SendDataBuffers = new List<Queue<byte[]>>();
         public ReceiveData OnReceive;
@@ -63,16 +64,16 @@ namespace TCPServer
                 return data;
             }
         }
-        public void T_ReceiveData(ClientInfo client)
+        public void T_ReceiveData(TCPClientInfo tcpClient)
         {
-            NetworkStream stream = client.client.GetStream();
+            NetworkStream stream = tcpClient.client.GetStream();
             byte[] buffer;
             while (m_IsRunning)
             {
                 bool received = false;
                 try
                 {
-                    if (client.client.Connected == false)
+                    if (tcpClient.client.Connected == false)
                     {
                         return;
                     }
@@ -85,7 +86,7 @@ namespace TCPServer
                         Buffer.BlockCopy(buffer, 0, chunk, 0, n);
                         lock (m_RecvDataBuffers)
                         {
-                            m_RecvDataBuffers[client.id].Enqueue(chunk);
+                            m_RecvDataBuffers[tcpClient.id].Enqueue(chunk);
                             received = true;
                         }
                     }
@@ -95,7 +96,7 @@ namespace TCPServer
                     Logger.LogToTerminal("error: " + e);
                 }
                 if(received){
-                OnReceive?.Invoke(client.id);
+                OnReceive?.Invoke(tcpClient.id);
                 }
                 Thread.Sleep(10);
             }
@@ -156,10 +157,17 @@ namespace TCPServer
         
         public void AppendToSend(int id,byte[] data)
         {
-            lock (m_SendDataBuffers)
+            try
             {
-                m_SendDataBuffers[id].Enqueue(data);
-                m_SendDataAutoResetEvent.Set();
+                lock (m_SendDataBuffers)
+                {
+                    m_SendDataBuffers[id].Enqueue(data);
+                    m_SendDataAutoResetEvent.Set();
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogToTerminal(e.Message);
             }
         }
         public override void OnRun()
@@ -175,7 +183,7 @@ namespace TCPServer
                         lock (m_Clients)
                         {
                            
-                            var clientInfo = new ClientInfo(client);
+                            var clientInfo = new TCPClientInfo(client);
                             var thread = CreateThread(() => T_ReceiveData(clientInfo));
                             clientInfo.receiveThread = thread;
                             m_Clients.Add(clientInfo);

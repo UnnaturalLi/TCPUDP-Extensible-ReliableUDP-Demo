@@ -95,7 +95,7 @@ namespace TCPClient
                         _ReadPos++;
                         _ReadPos %= 1024;
                     }
-                    INetPacket obj = Factory_Demo.Instance.GetPacket(m_RecevPacketIndex);
+                    INetPacket obj = PacketFactoryBase.Instance.GetPacket(m_RecevPacketIndex);
                     if (obj == null)
                     {
                         throw new Exception("Factory Error");

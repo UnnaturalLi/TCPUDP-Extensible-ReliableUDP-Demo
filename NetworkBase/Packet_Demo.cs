@@ -8,7 +8,6 @@ namespace NetworkBase
         public int y;
         public byte[] ToBytes()
         {
-            UInt32 n= 4;
            byte[] data = new byte[8];
            Array.Copy(BitConverter.GetBytes(x), 0, data, 0, 4);
            Array.Copy(BitConverter.GetBytes(y), 0, data, 4, 4);
@@ -23,6 +22,31 @@ namespace NetworkBase
             }
             x = BitConverter.ToInt32(data, 0);
             y = BitConverter.ToInt32(data, 4); 
+        }
+    }
+
+    public class RTTPacket_Demo : INetPacket
+    {
+        public DateTime sentTime;
+        public byte[] ToBytes()
+        {
+            return BitConverter.GetBytes(sentTime.Ticks);
+        }
+        public void FromBytes(byte[] data)
+        {
+            sentTime=new DateTime(BitConverter.ToInt64(data, 0));
+        }
+    }
+
+    public class HeartbeatPacket_Demo : INetPacket
+    {
+        public byte[] ToBytes()
+        {
+            return new byte[0];
+        }
+        public void FromBytes(byte[] data)
+        {
+            
         }
     }
 }

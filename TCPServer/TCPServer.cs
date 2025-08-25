@@ -40,12 +40,17 @@ namespace TCPServer
         {
             Logger.LogToTerminal($"TCP Server Start at{m_EndPoint}");
             m_Session.Start();
+            OnStart();
         }
         public void Stop()
         {
             Logger.LogToTerminal($"TCP Server Stop at{m_EndPoint}");
             m_Session.Stop();
+            OnStop();
         }
+        
+        public virtual void OnStart(){}
+        public virtual void OnStop(){}
         public virtual bool OnInit()
         {
             return true;
@@ -116,7 +121,7 @@ namespace TCPServer
         }
         public INetPacket UnPack(byte[] data)
         {
-            INetPacket obj = Factory_Demo.Instance.GetPacket(m_RecvPacketIndex);
+            INetPacket obj = PacketFactoryBase.Instance.GetPacket(m_RecvPacketIndex);
             obj.FromBytes(data);
             return obj;
         }
