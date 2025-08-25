@@ -14,8 +14,6 @@ A simple and extensible networking demo for TCP & UDP in C#. Both server and cli
 - UDP: keeps datagram boundaries, simple demo included
 - Queue-based dispatch: receiving thread parses and enqueues packets, user logic consumes them
 
-## 🚀 Build & Run
-Default programs run local demo code. Change IP/port in Program.cs as needed.  
 ## 🛠️ Extending with Your Own Packet
 Implement the interface:  
 ```csharp
@@ -72,6 +70,47 @@ public class TCPServer_Demo : TCPServer
         }
     }
 ```
+## 🚀 Build & Run
+Default programs run local demo code. Change IP/port in Program.cs as needed.  
+```csharp
+/*
+To run the client or Server, you should:
+1. Initialize the packet factory.
+   - Register all your custom packet types inside Factory.OnInit().
+   - This allows the framework to map TypeId ↔ Packet class.
+
+3. Create and initialize the Client or Server.
+   - Init(endpoint) will attempt to connect to the server.
+   - If it fails, check IP, port, or firewall.
+
+4. For TCP transfer, Set packet ID (Skip for UDP)
+   - SetReceivePacketIndex(id) will attempt to set the packet ID to the Server/Client
+
+5. Make sure the Server/Client is started after initialization
+   - Start() will start the Server/Client
+
+6. Add your own application logic below Start().
+   - For example, sending custom packets
+*/
+public static void Main(string[] args)
+        {
+            Factory_Demo factory_Demo = new Factory_Demo();
+            if (!factory_Demo.Init())
+            {
+                Logger.LogToTerminal("Fall to init Factory");
+                return;
+            }
+            TCPClient_Demo client = new TCPClient_Demo();
+            if (!client.Init(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9888)))
+            {
+                Logger.LogToTerminal("Fall to connect to the server");
+                return;
+            }
+            client.SetReceivePacketIndex(0); //to use TCP, please set the packet index(refer to the factory)
+            client.Start();
+            //customize your logic below
+        }
+```
 
 ## 📡 Protocol Notes  
 Header format  
@@ -87,6 +126,6 @@ Uses ring buffer to handle multiple packets
 Each packet ≤ 1200 bytes recommended to avoid fragmentation  
 Demo does not implement reliability layer
 
-📜 License
+## 📜 License
 MIT License  
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
