@@ -11,7 +11,7 @@ namespace UDPServer
             PacketFactoryBase factory = new Factory_Demo();
             factory.Init();
             UDPServer_Demo server = new UDPServer_Demo();
-            if (!server.Init(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8880)))
+            if (!server.Init(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8880),2,2,4))
             {
                 Logger.LogToTerminal("Failed to Init UDP server");
                 return;

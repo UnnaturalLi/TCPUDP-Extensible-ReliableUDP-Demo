@@ -42,18 +42,29 @@ namespace UDPServer
         protected Dictionary<int,Queue<byte[]>> m_RecvQueue = new Dictionary<int,Queue<byte[]>>();
         protected Dictionary<int,Queue<byte[]>> m_SendQueue = new Dictionary<int,Queue<byte[]>>();
         protected Thread m_SendThread;
+        public ReceiveData OnRegisterClient;
+        public ReceiveData OnDropClient;
+        protected byte[] m_HeartbeatPacket;
+        protected int m_HeartbeatCheckTime;
+        protected int m_HeartbeatDropTime;
         public override bool OnInit(params object[] args)
         {
             OnReceive = (ReceiveData) args[0];
+            OnRegisterClient = (ReceiveData) args[1];
+            OnDropClient = (ReceiveData) args[2];
             m_ClientNextID = 0;
+            m_HeartbeatPacket=(byte[])args[3];
+            m_HeartbeatCheckTime = (int)args[4]*1000;
+            m_HeartbeatDropTime = (int)args[5]*1000;
             try
             {
-                m_Client = new UdpClient(args[1] as IPEndPoint);
+                m_Client = new UdpClient(args[6] as IPEndPoint);
+                m_Client.Client.ReceiveTimeout = 20;
                 return true;
             }
             catch (Exception e)
             {
-                Logger.LogToTerminal("error: " + e);
+                Logger.LogToTerminal("Server Init error: " + e);
             }
             return false;
         }
@@ -67,6 +78,7 @@ namespace UDPServer
         public override void OnRun()
         {
             Receive();
+            HearbeatCheck();
         }
         public override void OnStop()
         {
@@ -125,10 +137,57 @@ namespace UDPServer
         {
             return new List<int>(m_ClientsDic.Keys);
         }
+
+        public void HearbeatCheck()
+        {
+            List<int> ClientsToDrop=null;
+            foreach (var VARIABLE in m_ClientsDic)
+            {
+                var deltaTime = DateTime.Now - VARIABLE.Value.lastTime;
+                if (deltaTime.TotalMilliseconds > m_HeartbeatDropTime)
+                {
+                    if (ClientsToDrop == null)
+                    {
+                        ClientsToDrop = new List<int>();
+                    }
+                    ClientsToDrop.Add(VARIABLE.Key);
+                }else if (deltaTime.TotalMilliseconds > m_HeartbeatCheckTime)
+                {
+                    AppendToSend(VARIABLE.Key,m_HeartbeatPacket);
+                }
+            }
+            if (ClientsToDrop != null)
+            {
+                foreach (var id in ClientsToDrop)
+                {
+                    lock (m_ClientsDic)
+                    {
+                        m_ClientsDic.Remove(id);
+                    }
+                    lock (m_RecvQueue)
+                    {
+                        m_RecvQueue.Remove(id);
+                    }
+                    lock (m_SendQueue)
+                    {
+                        m_SendQueue.Remove(id);
+                    }
+                    OnDropClient?.Invoke(id);
+                }
+            }
+        }
         public void Receive()
         {
             IPEndPoint ipEndPoint=new IPEndPoint(IPAddress.Any, 0);
-            byte[] data=m_Client.Receive(ref ipEndPoint);
+            byte[] data;
+            try
+            {
+                data=m_Client.Receive(ref ipEndPoint);
+            }
+            catch (Exception e)
+            {
+                return;
+            }
             int id = -1;
             foreach (var VARIABLE in m_ClientsDic)
             {
@@ -148,6 +207,7 @@ namespace UDPServer
                 m_RecvQueue[id] = new Queue<byte[]>();
                 m_SendQueue[id] = new Queue<byte[]>();
                 Logger.LogToTerminal($"New Client, ID: {id}");
+                OnRegisterClient?.Invoke(id);
             }
             m_ClientsDic[id].SetLastTime();
             m_RecvQueue[id].Enqueue(data);

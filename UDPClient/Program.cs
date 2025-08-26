@@ -16,7 +16,7 @@ namespace UDPClient
                 return;
             }
             udpClient.Start();
-            Console.WriteLine("UDP Server Started");
+            Console.WriteLine("UDP Client Started");
             Console.WriteLine("-------------------");
             Console.WriteLine("1 to Send RTT Packet");
             Console.WriteLine("2 to Send Demo Packet");

@@ -25,11 +25,19 @@ namespace NetworkBase
 
         public void T_Run()
         {
-            while (m_IsRunning)
+            while (true)
             {
-                OnRun();
-                Thread.Sleep(m_Interval);
+                if (!m_IsRunning)
+                {
+                    Thread.Sleep(m_Interval);
+                }
+                else
+                {
+                    OnRun();
+                    Thread.Sleep(m_Interval);
+                }
             }
+            
             
         }
         public bool Init(int framRate, params object[] args)

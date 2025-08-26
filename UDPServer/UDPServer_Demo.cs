@@ -19,5 +19,15 @@ namespace UDPServer
                 Logger.LogToTerminal($"Received from {id} : {(obj as Packet_Demo).x} {(obj as Packet_Demo).y}");
             }
         }
+
+        public override void OnRegisterClient(int id)
+        {
+            Logger.LogToTerminal($"Register client {id}");
+        }
+
+        public override void OnDropClient(int id)
+        {
+            Logger.LogToTerminal($"Dropped client {id}");
+        }
     }
 }
