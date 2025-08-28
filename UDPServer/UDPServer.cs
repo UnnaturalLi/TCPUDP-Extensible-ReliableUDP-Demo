@@ -63,7 +63,7 @@ namespace UDPServer
             byte[] returnData=new byte[data.Length+8];
             try
             {
-                var header=BitConverter.GetBytes(data.Length);
+                var header=BitConverter.GetBytes((uint)data.Length);
                 Array.Copy(header,0,returnData,0,4);
                 Array.Copy(BitConverter.GetBytes(PacketFactoryBase.Instance.GetPacketID(obj.GetType())),0,returnData,4,4);
                 Array.Copy(data, 0, returnData,8,data.Length);
