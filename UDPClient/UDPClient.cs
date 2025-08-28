@@ -68,12 +68,19 @@ namespace UDPClient
                     byte[] buffer = new byte[4];
                     Array.Copy(packetByte,0,buffer,0,4);
                     uint length=BitConverter.ToUInt32(buffer,0);
-                    if (length == 0)
-                    {
-                        continue;
-                    }
                     Array.Copy(packetByte,4,buffer,0,4);
                     int typeID=BitConverter.ToInt32(buffer,0);
+                    if (length == 0)
+                    {
+                        INetPacket empty=PacketFactoryBase.Instance.GetPacket(typeID);
+                        empty.FromBytes(new byte[0]);
+                        lock (dataQueue)
+                        {
+                            dataQueue.Enqueue(empty);
+                        }
+                        newPacket = true;
+                        continue;
+                    }
                     buffer = new byte[length];
                     INetPacket packet = PacketFactoryBase.Instance.GetPacket(typeID);
                     Array.Copy(packetByte,8,buffer,0,length);
