@@ -10,12 +10,12 @@ namespace UDPServer
         protected UDPServerSession m_Session;
         protected Thread m_SendThread;
         protected IPEndPoint m_EndPoint;
-        public bool Init(IPEndPoint ipEndPoint, int HeartbeatID,int HeartbeatCheckTime,int HeartbeatDropTime)
+        public bool Init(IPEndPoint ipEndPoint, int HeartbeatID,int HeartbeatCheckTime,int HeartbeatDropTime,int FrameRate)
         {
             this.m_EndPoint = ipEndPoint;
             m_Session=new UDPServerSession();
             byte[] Heatbeat=ToPacket(PacketFactoryBase.Instance.GetPacket(HeartbeatID));
-            m_Session.Init(60, (ReceiveData)OnReceiveData, (ReceiveData)OnRegisterClient, (ReceiveData)OnDropClient, Heatbeat,HeartbeatCheckTime,HeartbeatDropTime,ipEndPoint);
+            m_Session.Init(FrameRate, (ReceiveData)OnReceiveData, (ReceiveData)OnRegisterClient, (ReceiveData)OnDropClient, Heatbeat,HeartbeatCheckTime,HeartbeatDropTime,ipEndPoint);
             return OnInit();
         }
 

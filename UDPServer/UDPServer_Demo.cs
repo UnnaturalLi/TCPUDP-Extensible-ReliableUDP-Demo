@@ -17,6 +17,7 @@ namespace UDPServer
             else if (obj.GetType() == typeof(Packet_Demo))
             {
                 Logger.LogToTerminal($"Received from {id} : {(obj as Packet_Demo).x} {(obj as Packet_Demo).y}");
+                SendTo(id,obj);
             }
         }
 

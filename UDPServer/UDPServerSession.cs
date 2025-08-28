@@ -96,20 +96,23 @@ namespace UDPServer
                     continue;
                 }
                 bool sent = false;
-                foreach (var VARIABLE in m_SendQueue)
+                lock (m_SendQueue)
                 {
-                    if (VARIABLE.Value.Count > 0)
+                    foreach (var VARIABLE in m_SendQueue)
                     {
-                        var data = VARIABLE.Value.Dequeue();
-                        try
+                        if (VARIABLE.Value.Count > 0)
                         {
-                            m_Client.Send(data,data.Length,m_ClientsDic[VARIABLE.Key].ip);
+                            var data = VARIABLE.Value.Dequeue();
+                            try
+                            {
+                                m_Client.Send(data,data.Length,m_ClientsDic[VARIABLE.Key].ip);
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.LogToTerminal("Sending error: " + e);
+                            }
+                            sent = true;
                         }
-                        catch (Exception e)
-                        {
-                            Logger.LogToTerminal("Sending error: " + e);
-                        }
-                        sent = true;
                     }
                 }
                 if (!sent)
