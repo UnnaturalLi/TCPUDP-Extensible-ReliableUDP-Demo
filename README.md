@@ -5,8 +5,8 @@ UDP now supports reliable transfer using seq and ack,please check it out in sub 
 ## ✨ Features
 - TCP + UDP examples with a unified structure
 - Extensible message system: implement `INetPacket` and register in the factory to customize send/receive functions
-- Unified packet header:
-  UDP(None Reliable):[ Length(4) ][ TypeId(4) ][ Payload(Length) ]
+- Unified packet header:  
+  UDP(None Reliable):[ Length(4) ][ TypeId(4) ][ Payload(Length) ]  
   UDP(Reliable):[ Length(4) ][ TypeId(4) ][ Flag(4) ][ Ack(4) ][ Seq(4) ][ AckMap(4) ][ Payload(Length) ]  
   TCP:[ Length(4) ][ Payload(Length) ]
 - Length: payload size (not including header)
