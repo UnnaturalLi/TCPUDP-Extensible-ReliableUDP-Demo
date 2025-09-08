@@ -1,6 +1,7 @@
 # Network_Base_For_UDP_And_TCP
 A simple and extensible networking demo for TCP & UDP in C#. Both server and client can send and receive different message types via user-defined classes implementing a shared interface.
-
+# Update:
+UDP now supports reliable transfer using seq and ack,please check it out in sub brench  
 ## ✨ Features
 - TCP + UDP examples with a unified structure
 - Extensible message system: implement `INetPacket` and register in the factory to customize send/receive functions
