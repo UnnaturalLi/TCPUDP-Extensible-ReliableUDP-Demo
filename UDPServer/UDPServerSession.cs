@@ -49,6 +49,7 @@ namespace UDPServer
         protected int m_HeartbeatDropTime;
         public override bool OnInit(params object[] args)
         {
+            
             OnReceive = (ReceiveData) args[0];
             OnRegisterClient = (ReceiveData) args[1];
             OnDropClient = (ReceiveData) args[2];
@@ -212,9 +213,6 @@ namespace UDPServer
                 Logger.LogToTerminal($"New Client, ID: {id}");
                 OnRegisterClient?.Invoke(id);
             }
-            m_ClientsDic[id].SetLastTime();
-            m_RecvQueue[id].Enqueue(data);
-            OnReceive?.Invoke(id);
         }
 
         public List<byte[]> GetDataFromDic(int id)

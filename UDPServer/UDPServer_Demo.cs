@@ -8,7 +8,7 @@ namespace UDPServer
         {
             if (obj.GetType() == typeof(HeartbeatPacket_Demo))
             {
-                Logger.LogToTerminal($"Received Heartbeat from {id}");
+                
             }
             else if (obj.GetType() == typeof(RTTPacket_Demo))
             {

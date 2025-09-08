@@ -7,10 +7,10 @@ namespace UDPClient
     {
         public static void Main(string[] args)
         {
-            PacketFactoryBase factory = new Factory_Demo();
+            PacketFactoryBase factory = new Factory_Demo_UDP();
             factory.Init();
             UDPClient_Demo udpClient = new UDPClient_Demo();
-            if (!udpClient.Init(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8880)))
+            if (!udpClient.Init(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8880),0))
             {
                 Logger.LogToTerminal("Failed to connect to UDP server");
                 return;

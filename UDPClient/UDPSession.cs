@@ -1,6 +1,3 @@
-/*
- * Pack: [uint length 4][int packetID 4][body byte[length]]
- */
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
@@ -22,8 +19,6 @@ namespace UDPClient
         
         private Queue<byte[]> m_ReceiveBuffers = new Queue<byte[]>();
         public readonly AutoResetEvent hasDataToHandle = new AutoResetEvent(false);
-        
-        
         protected override bool OnInit()
         {
             try

@@ -15,7 +15,7 @@ namespace TCPClient
         private uint m_recvBufferSize;
         private uint _ReadPos=0, _WritePos=0;
         protected int m_RecevPacketIndex;
-        protected override bool OnInit()
+        protected override bool OnInit(params object[] args)
         {
             dataQueue = new Queue<INetPacket>();
             m_recvBuffer = new byte[1024];

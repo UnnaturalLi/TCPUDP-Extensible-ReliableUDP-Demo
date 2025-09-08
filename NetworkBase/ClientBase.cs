@@ -12,10 +12,10 @@ namespace NetworkBase
             set { session.isClosed = value; }
         }
 
-        public virtual bool Init(IPEndPoint ipEndPoint)
+        public virtual bool Init(IPEndPoint ipEndPoint, params object[] args)
         {
             m_Addr = ipEndPoint;
-            return OnInit();
+            return OnInit(args);
         }
         public void Start()
         {
@@ -31,7 +31,7 @@ namespace NetworkBase
             
             isStopped = true;
         }
-        protected virtual bool OnInit()
+        protected virtual bool OnInit(params object[] args)
         {
             
             return true;

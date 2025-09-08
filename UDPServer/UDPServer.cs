@@ -10,12 +10,21 @@ namespace UDPServer
         protected UDPServerSession m_Session;
         protected Thread m_SendThread;
         protected IPEndPoint m_EndPoint;
+        protected int m_HeartbeatID;
+        protected Dictionary<int , uint> m_Acks = new Dictionary<int , uint>();
+        protected Dictionary<int , uint> m_Seqs = new Dictionary<int , uint>();
+        protected Dictionary<int , uint> m_AckMaps = new Dictionary<int , uint>();
+        protected Dictionary<int , uint> m_NextHandledPackets = new Dictionary<int , uint>();
+        protected Dictionary<int,Dictionary<uint,byte[]>> m_PendingACKPackets= new Dictionary<int,Dictionary<uint,byte[]>>();
+        protected Dictionary<int,Dictionary<uint,INetPacket>> m_heldBackPackets= new Dictionary<int,Dictionary<uint,INetPacket>>();
+        
         public bool Init(IPEndPoint ipEndPoint, int HeartbeatID,int HeartbeatCheckTime,int HeartbeatDropTime,int FrameRate)
         {
+            m_HeartbeatID= HeartbeatID;
             this.m_EndPoint = ipEndPoint;
             m_Session=new UDPServerSession();
-            byte[] Heatbeat=ToPacket(PacketFactoryBase.Instance.GetPacket(HeartbeatID));
-            m_Session.Init(FrameRate, (ReceiveData)OnReceiveData, (ReceiveData)OnRegisterClient, (ReceiveData)OnDropClient, Heatbeat,HeartbeatCheckTime,HeartbeatDropTime,ipEndPoint);
+            byte[] Heatbeat=ToHeartBeatPacket(PacketFactoryBase.Instance.GetPacket(HeartbeatID));
+            m_Session.Init(FrameRate, (ReceiveData)OnReceiveData, (ReceiveData)RegisterClient, (ReceiveData)DropClient, Heatbeat,HeartbeatCheckTime,HeartbeatDropTime,ipEndPoint);
             return OnInit();
         }
 
@@ -43,7 +52,7 @@ namespace UDPServer
             var data=m_Session.GetDataFromDic(id);
             foreach (var VARIABLE in data)
             {
-                var obj=UnPack(VARIABLE);
+                var obj=UnPack(VARIABLE,id);
                 if (obj != null)
                 {
                     OnReceiveObj(id, obj);
@@ -53,20 +62,50 @@ namespace UDPServer
         public abstract void OnReceiveObj(int id, INetPacket obj);
         public abstract void OnRegisterClient(int id);
         public abstract void OnDropClient(int id);
+
+        public void DropClient(int id)
+        {
+            m_Acks.Remove(id);
+            m_Seqs.Remove(id);
+            m_NextHandledPackets.Remove(id);
+            m_PendingACKPackets[id].Clear();
+            m_PendingACKPackets.Remove(id);
+            m_AckMaps.Remove(id);
+            m_heldBackPackets[id].Clear();
+            m_heldBackPackets.Remove(id);
+            OnDropClient(id);
+        }
+        public void RegisterClient(int id)
+        {
+            m_Acks[id] =0;
+            m_Seqs[id] = 1;
+            m_AckMaps[id] = 0;
+            m_NextHandledPackets[id] = 1;
+            m_PendingACKPackets[id] = new Dictionary<uint, byte[]>();
+            m_heldBackPackets[id] = new Dictionary<uint,INetPacket>();
+            OnRegisterClient(id);
+        }
         public void SendTo(int id, INetPacket obj)
         {
-            m_Session.AppendToSend(id, ToPacket(obj));
+            var data = ToPacket(obj, id);
+            m_Session.AppendToSend(id, data);
+            m_PendingACKPackets[id].Add(m_Seqs[id]-1,data);
         }
-        public byte[] ToPacket(INetPacket obj)
+
+        public byte[] ToHeartBeatPacket(INetPacket obj)
         {
             byte[] data=obj.ToBytes();
-            byte[] returnData=new byte[data.Length+8];
+            byte[] returnData=new byte[data.Length+24];
             try
             {
                 var header=BitConverter.GetBytes((uint)data.Length);
                 Array.Copy(header,0,returnData,0,4);
-                Array.Copy(BitConverter.GetBytes(PacketFactoryBase.Instance.GetPacketID(obj.GetType())),0,returnData,4,4);
-                Array.Copy(data, 0, returnData,8,data.Length);
+                Array.Copy(BitConverter.GetBytes(m_HeartbeatID),0,returnData,4,4);
+                Array.Copy(BitConverter.GetBytes(0),0,returnData,8,4);
+                Array.Copy(BitConverter.GetBytes(0u),0,returnData,12,4);
+                Array.Copy(BitConverter.GetBytes(0u),0,returnData,16,4);
+                Array.Copy(BitConverter.GetBytes(0u),0,returnData,20,4);
+                Array.Copy(data, 0, returnData,24,data.Length);
                 return returnData;
             }
             catch (Exception e)
@@ -75,22 +114,104 @@ namespace UDPServer
                 return null;
             }
         }
-        public INetPacket UnPack(byte[] data)
+        public byte[] ToPacket(INetPacket obj,int id)
         {
-            byte[] headerBuffer=new byte[4];
-            Array.Copy(data,0,headerBuffer,0,4);
-            uint length=BitConverter.ToUInt32(headerBuffer,0);
-            if (length == 0)
+            byte[] data=obj.ToBytes();
+            byte[] returnData=new byte[data.Length+24];
+            try
             {
+                var header=BitConverter.GetBytes((uint)data.Length);
+                Array.Copy(header,0,returnData,0,4);
+                Array.Copy(BitConverter.GetBytes(PacketFactoryBase.Instance.GetPacketID(obj.GetType())),0,returnData,4,4);
+                Array.Copy(BitConverter.GetBytes(0),0,returnData,8,4);
+                Array.Copy(BitConverter.GetBytes(m_Acks[id]),0,returnData,12,4);
+                Array.Copy(BitConverter.GetBytes(m_Seqs[id]),0,returnData,16,4);
+                Array.Copy(BitConverter.GetBytes(m_AckMaps[id]),0,returnData,20,4);
+                Array.Copy(data, 0, returnData,24,data.Length);
+                m_Seqs[id]++;
+                return returnData;
+            }
+            catch (Exception e)
+            {
+                Logger.LogToTerminal(e.Message);
                 return null;
             }
-            Array.Copy(data,4,headerBuffer,0,4);
-            int packID=BitConverter.ToInt32(headerBuffer,0);
+        }
+        public INetPacket UnPack(byte[] data,int id)
+        {
+            uint length=BitConverter.ToUInt32(data,0);
+            int packID=BitConverter.ToInt32(data,4);
+            int flag=BitConverter.ToInt32(data,8);
+            uint ack=BitConverter.ToUInt32(data,12);
+            
+            uint seq=BitConverter.ToUInt32(data,16);
+            uint ackmap=BitConverter.ToUInt32(data,20);
+            UpdateACK(ack,id);
+            CheckResending(ack,ackmap,id);
+            SendACK(seq,id);
             INetPacket obj = PacketFactoryBase.Instance.GetPacket(packID);
-            byte[] packBuffer = new byte[length];
-            Array.Copy(data,8,packBuffer,0,length);
-            obj.FromBytes(packBuffer);
-            return obj;
+            if (flag == 0)
+            {
+                byte[] packBuffer = new byte[length];
+                Array.Copy(data, 8, packBuffer, 0, length);
+                obj.FromBytes(packBuffer);
+                return obj;
+            }
+
+            return null;
+        }
+
+        public void SendACK(uint seq,int id)
+        {
+            byte[] packet = new byte[24];
+            Array.Copy(BitConverter.GetBytes(0u),0,packet,0,4);
+            Array.Copy(BitConverter.GetBytes(-1),0,packet,4,4);
+            Array.Copy(BitConverter.GetBytes(1),0,packet,8,4);
+            Array.Copy(BitConverter.GetBytes(m_Acks[id]),0,packet,12,4);
+            Array.Copy(BitConverter.GetBytes(0),0,packet,16,4);
+            Array.Copy(BitConverter.GetBytes(m_AckMaps[id]),0,packet,20,4);
+            m_Session.AppendToSend(id,packet);
+        }
+        public void UpdateACK(uint ack,int id)
+        {
+            if (ack > m_Acks[id])
+            {
+                uint lastAck = m_Acks[id];
+                m_Acks[id] = ack;
+                m_AckMaps[id] = m_AckMaps[id] << (int)(ack - lastAck);
+                m_AckMaps[id] |= 1u;
+            }
+            else
+            {
+                uint lastAck = m_Acks[id];
+                m_AckMaps[id] |= 1u<<(int)(lastAck - ack);
+            }
+        }
+        public void CheckResending(uint ack,uint ackMap,int id)
+        {
+            int count = (ack < 32u) ? (int)(ack) : 32;
+            for (int i = 0; i < count; i++)
+            {
+                if ((ackMap&1u<<i)==(1u<<i))
+                {
+                    if (m_PendingACKPackets[id].ContainsKey((uint)(ack - i)))
+                    {
+                        m_PendingACKPackets[id].Remove((uint)(ack - i));
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        m_Session.AppendToSend(id, m_PendingACKPackets[id][(uint)(ack - i)]);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogToTerminal("No packet Found "+e.Message);
+                    }
+                    
+                }
+            }
         }
         public void Broadcast(INetPacket obj)
         {

@@ -8,10 +8,10 @@ namespace UDPServer
     {
         public static void Main(string[] args)
         {
-            PacketFactoryBase factory = new Factory_Demo();
+            PacketFactoryBase factory = new Factory_Demo_UDP();
             factory.Init();
             UDPServer_Demo server = new UDPServer_Demo();
-            if (!server.Init(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8880),2,2,4,60))
+            if (!server.Init(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8880),0,2,4,60))
             {
                 Logger.LogToTerminal("Failed to Init UDP server");
                 return;

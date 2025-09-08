@@ -11,7 +11,9 @@ namespace UDPClient
             {
                 while (dataQueue.Count > 0)
                 {
+                    
                     var data = dataQueue.Dequeue();
+                    
                     if (data.GetType() == typeof(HeartbeatPacket_Demo))
                     {
                         Send(data);
