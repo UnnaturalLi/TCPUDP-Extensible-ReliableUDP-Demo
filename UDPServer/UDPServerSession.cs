@@ -213,6 +213,9 @@ namespace UDPServer
                 Logger.LogToTerminal($"New Client, ID: {id}");
                 OnRegisterClient?.Invoke(id);
             }
+            m_ClientsDic[id].SetLastTime();
+            m_RecvQueue[id].Enqueue(data);
+            OnReceive?.Invoke(id);
         }
 
         public List<byte[]> GetDataFromDic(int id)
