@@ -153,7 +153,7 @@ namespace UDPServer
             if (flag == 0)
             {
                 byte[] packBuffer = new byte[length];
-                Array.Copy(data, 8, packBuffer, 0, length);
+                Array.Copy(data, 24, packBuffer, 0, length);
                 obj.FromBytes(packBuffer);
                 return obj;
             }
