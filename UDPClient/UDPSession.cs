@@ -3,6 +3,8 @@ using System.Net.Sockets;
 using System.Threading;
 using TCPClient;
 using System;
+using System.Net;
+
 namespace UDPClient
 
 {
@@ -19,6 +21,11 @@ namespace UDPClient
         
         private Queue<byte[]> m_ReceiveBuffers = new Queue<byte[]>();
         public readonly AutoResetEvent hasDataToHandle = new AutoResetEvent(false);
+        
+        private uint m_Ack;
+        private uint m_AckMap;
+        private bool m_AckUpdated;
+        private Thread m_AckThread;
         protected override bool OnInit()
         {
             try
@@ -38,6 +45,7 @@ namespace UDPClient
             m_IsRunning = true;
             m_SendThread = CreateThread(T_Send);
             m_ReceiveThread= CreateThread(T_Receive);
+            m_AckThread = CreateThread(T_SendAck);
         }
 
         protected override void OnClose()
@@ -149,6 +157,33 @@ namespace UDPClient
                     Logger.LogToTerminal("Send error: " + e.ToString());
                 }
                 m_HasDataToSend.WaitOne(1000);
+            }
+        }
+        public void UpdateAck(uint ack, uint ackMap)
+        {
+            m_Ack = ack;
+            m_AckMap = ackMap;
+            m_AckUpdated=true;
+        }
+
+        public void T_SendAck()
+        {
+            while(true){
+                if (!m_IsRunning|| m_AckUpdated==false)
+                {
+                    Thread.Sleep(1000);
+                    continue;
+                }
+                byte[] packet = new byte[24];
+                Array.Copy(BitConverter.GetBytes(0u),0,packet,0,4);
+                Array.Copy(BitConverter.GetBytes(-1),0,packet,4,4);
+                Array.Copy(BitConverter.GetBytes(1),0,packet,8,4);
+                Array.Copy(BitConverter.GetBytes(m_Ack),0,packet,12,4);
+                Array.Copy(BitConverter.GetBytes(0),0,packet,16,4);
+                Array.Copy(BitConverter.GetBytes(m_AckMap),0,packet,20,4);
+                AppendToSendQueue(packet);
+                m_AckUpdated=false;
+                Thread.Sleep(1000);
             }
         }
     }

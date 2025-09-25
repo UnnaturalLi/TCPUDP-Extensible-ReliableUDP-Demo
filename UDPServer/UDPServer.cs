@@ -148,7 +148,7 @@ namespace UDPServer
             uint ackmap=BitConverter.ToUInt32(data,20);
             UpdateACK(ack,id);
             CheckResending(ack,ackmap,id);
-            SendACK(seq,id);
+            SendACK(id);
             INetPacket obj = PacketFactoryBase.Instance.GetPacket(packID);
             if (flag == 0)
             {
@@ -161,16 +161,9 @@ namespace UDPServer
             return null;
         }
 
-        public void SendACK(uint seq,int id)
+        public void SendACK(int id)
         {
-            byte[] packet = new byte[24];
-            Array.Copy(BitConverter.GetBytes(0u),0,packet,0,4);
-            Array.Copy(BitConverter.GetBytes(-1),0,packet,4,4);
-            Array.Copy(BitConverter.GetBytes(1),0,packet,8,4);
-            Array.Copy(BitConverter.GetBytes(m_Acks[id]),0,packet,12,4);
-            Array.Copy(BitConverter.GetBytes(0),0,packet,16,4);
-            Array.Copy(BitConverter.GetBytes(m_AckMaps[id]),0,packet,20,4);
-            m_Session.AppendToSend(id,packet);
+            m_Session.UpdateACK(m_Acks[id],m_AckMaps[id],id);
         }
         public void UpdateACK(uint ack,int id)
         {

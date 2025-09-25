@@ -119,17 +119,7 @@ namespace UDPClient
         }
         protected abstract void OnReceive();
 
-        private void SendAck()
-        {
-            byte[] packet = new byte[24];
-            Array.Copy(BitConverter.GetBytes(0u),0,packet,0,4);
-            Array.Copy(BitConverter.GetBytes(-1),0,packet,4,4);
-            Array.Copy(BitConverter.GetBytes(1),0,packet,8,4);
-            Array.Copy(BitConverter.GetBytes(m_Ack),0,packet,12,4);
-            Array.Copy(BitConverter.GetBytes(0),0,packet,16,4);
-            Array.Copy(BitConverter.GetBytes(m_AckMap),0,packet,20,4);
-            (session as UDPSession).AppendToSendQueue(packet);
-        }
+        
         private void Receive()
         {
             var newData=(session as UDPSession).GetReceivedData();
@@ -219,7 +209,7 @@ namespace UDPClient
             }
             if (oldAck != m_Ack || oldMap != m_AckMap)
             {
-                SendAck();
+                (session as UDPSession).UpdateAck(m_Ack, m_AckMap);
             }
         }
     }
